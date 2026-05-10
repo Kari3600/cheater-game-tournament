@@ -1,17 +1,266 @@
 <html>
-    <head>
-        <title>My Flask App</title>
-    </head>
-    <body>
-        <form action="/upload" method="post" enctype="multipart/form-data">
-            <input type="file" name="agent">
-            <button type="submit">Upload</button>
-        </form>
-        <h1>Leaderboard</h1>
-        {% for row in ranking %}
-            <div>
-                {{ row[0] }} - {{ row[1] }}
+  <head>
+    <title>Cheater Game Tournament</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+  </head>
+  <body>
+
+    <div class="top-bar">
+      <div class="container">
+        <a href="/" class="logo">
+          <img src="/static/logotype.svg" alt="Logo">
+        </a>
+        <ul class="nav-links">
+          <li><a href="https://optil.io/optilion/problem/1#" onclick="return optimizePerformance(this)">Tutorials</a></li>
+          <li><a href="https://optil.io/optilion/problem/1#" onclick="return optimizePerformance(this)">Problems</a></li>
+          <li><a href="https://optil.io/optilion/problem/1#" onclick="return optimizePerformance(this)">Standing</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="problem-header">
+      <div class="container">
+        <div class="problem-title-area">
+          <h1>TUTORIAL</h1>
+          <div class="author">By <a href="https://optil.io/optilion/problem/1#" onclick="return optimizePerformance(this)">Sywlester Swat</a></div>
+        </div>
+
+        <div class="alert-banner">
+          I have also emailed swat to join this contest
+        </div>
+
+        <div class="tabs">
+          <a href="#" class="tab active" data-tab="description">
+            DESCRIPTION
+            <span class="arrow"></span>
+          </a>
+          <a href="#" class="tab" data-tab="standing">
+            STANDING
+            <span class="arrow"></span>
+          </a>
+          <a href="#" class="tab" data-tab="submit">
+            SUBMIT
+            <span class="arrow"></span>
+          </a>
+          <a href="#" class="tab" data-tab="discuss">
+            DISCUSS
+            <span class="arrow"></span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="container">
+
+        <div class="tab-content active" id="tab-description">
+          <div class="section">
+            <h3>REQUIRED STRUCTURE</h3>
+            <p>
+              Your submission must be a single Python file named <code>yourname.py</code>
+              containing a class that inherits from <code>Player</code>:
+            </p>
+            <pre><code>from player import Player
+
+class YourName(Player):
+    def putCard(self, declared_card):
+        # Return (true_card, declared_card) to play, or "draw" to draw cards
+        return self.cards[0], self.cards[0]
+
+    def checkCard(self, opponent_declaration):
+        # Return True to check, False to pass
+        return False</code></pre>
+            <p>
+              The class name and filename must match, e.g. class <code>Smith_Johnson</code>
+              in file <code>smith_johnson.py</code>.
+            </p>
+            <h4>putCard(declared_card)</h4>
+            <p>
+              The <code>declared_card</code> is the card your opponent claimed to have put.
+              If <code>None</code>, the pile is empty or cards were just drawn — you may put
+              any card. Return a tuple <code>(true_card, declared_card)</code> where
+              <code>true_card</code> is the actual card you play (must be in your hand) and
+              <code>declared_card</code> is what you tell your opponent. If they differ, you
+              are cheating. Return the string <code>"draw"</code> to take 3 cards instead.
+            </p>
+            <h4>checkCard(opponent_declaration)</h4>
+            <p>
+              Decide whether to check your opponent. Return <code>True</code> to check or
+              <code>False</code> to trust their declaration.
+            </p>
+            <h4>getCheckFeedback(...) (optional)</h4>
+            <p>
+              Called at the end of each round with details about who checked and what cards
+              were revealed. Use this to update your strategy between rounds.
+            </p>
+          </div>
+
+          <div class="section">
+            <h3>DESCRIPTION</h3>
+            <p>
+              During last laboratories we considered prisoner's dilemma as a sequential game.
+              Moreover, we know that players may behave in different ways depending on the
+              number of iterations, the possibility of forgiveness or not the betrayal. We can
+              also considered a game where we can get the knowledge about betrayal only when we
+              want it. The game that we have is a sequential game where each player can choose
+              from the following actions:
+            </p>
+            <ul>
+              <li>to betray or not,</li>
+              <li>to check or not.</li>
+            </ul>
+            <p>
+              The pay-off matrix is not constant for the whole game and needs to be updated in
+              each iteration and possible gain or cost may be adjusted individually by each
+              player. Moreover, in each turn each player wants to predict the choice of the
+              opponent.
+            </p>
+            <p>
+              The game that we are talking about is known as Cheater. We play only part of the
+              card deck: from 9 to ace in 4 colours. Each player at the beginning of the game
+              gets 8 cards. Your task is:
+            </p>
+            <ul>
+              <li>put a card on a table which is the same or higher than the card on the top if you have no plan for cheat or</li>
+              <li>put whatever card on a table if you plan to cheat or</li>
+              <li>resign from putting card and just taking 3 cards from the top of the heap.</li>
+            </ul>
+            <p>
+              Remember that you opponent may check if you are saying the truth. Then:
+            </p>
+            <ul>
+              <li>if you cheated: you take 3 cards from the top of the heap</li>
+              <li>if you didn't cheat: your opponent take 3 cards from the top of the heap.</li>
+            </ul>
+            <p>
+              Then you switch the roles: your opponent puts cards and you need to decide if you
+              check her/him or not. The game ends when somebody puts all the cards on the table.
+              Try to base on a pay-off matrix that you update after each turn.
+            </p>
+            <p>
+              Your main task is to write a python script of the player which has the best
+              strategy. Your code should base on the exemplary code which is available in a
+              separate jupyter notebook. Take care especially for the input and output of your
+              player. Moreover, there is a time limit of 0.1 s per decision.
+            </p>
+          </div>
+
+          <div class="section">
+            <h3>SCORING</h3>
+            <p>
+              Your player needs to go through two stages of scoring:
+            </p>
+            <ol>
+              <li>games with unknown players which implements both more naive and sophisticated approaches and strategies,</li>
+              <li>games with all people from the group.</li>
+            </ol>
+            <p>Each competition in pairs will be run 100 times.</p>
+            <ul>
+              <li>3 points: your player wins with the naive player,</li>
+              <li>5 points: your player wins with the player with more advanced strategy.</li>
+            </ul>
+            <p>
+              All scores between will be given basing on your position in the ranking of all
+              players.
+            </p>
+            <ul>
+              <li>The project should be single python file with your player which inherits from class Player and your name(s) both as class name and filename e.g. class Smith_Johnson and file name as smith_johnson.py.</li>
+              <li>The code should be sent by 01/06/2025 23.59</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-runs">
+          <div class="section">
+            <h3>RUNS</h3>
+            <p>Run history will appear here.</p>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-standing">
+          <div class="section">
+            <h3>STANDING</h3>
+            <div class="legend">
+              <span>IE — Initialization Error</span>
+              <span>TLE — Time Limit Exceeded</span>
+              <span>WA — Wrong Answer</span>
+              <span>RTE — Runtime Error</span>
+              <span>MLE — Memory Limit Exceeded</span>
+              <span>OLE — Output Limit Exceeded</span>
+              <span>PLE — Presentation Limit Exceeded</span>
             </div>
-        {% endfor %}
-    </body>
+            {% if ranking %}
+            <table class="leaderboard-table">
+              <thead>
+                <tr>
+                  <th>USER</th>
+                  <th>LANGUAGE</th>
+                  <th>SCORE</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in ranking %}
+                <tr>
+                  <td class="col-user">{{ row[0] }}</td>
+                  <td>Python</td>
+                  <td class="col-score">{{ row[1] }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <p>No submissions yet. Be the first!</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-submit">
+          <div class="section">
+            <h3>SUBMIT</h3>
+            <p>Upload your Python agent file (.py)</p>
+            <form class="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+              <input type="file" name="agent" accept=".py">
+              <button type="submit">Upload</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-discuss">
+          <div class="section">
+            <h3>DISCUSS</h3>
+            <p>Discussion forum coming soon.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <script>
+      function optimizePerformance(el) {
+        window.open('https://www.youtube.com/watch?v=xvFZjo5PgG0', '_blank');
+        return false;
+      }
+      document.querySelectorAll('.tab').forEach(function(tab) {
+        tab.addEventListener('click', function(e) {
+          e.preventDefault();
+          document.querySelectorAll('.tab').forEach(function(t) {
+            t.classList.remove('active');
+          });
+          document.querySelectorAll('.tab-content').forEach(function(tc) {
+            tc.classList.remove('active');
+          });
+          this.classList.add('active');
+          document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+        });
+      });
+      var activeTab = document.querySelector('.tab.active');
+      if (activeTab) {
+        document.getElementById('tab-' + activeTab.dataset.tab).classList.add('active');
+      }
+    </script>
+
+  </body>
 </html>
