@@ -83,5 +83,3 @@ def upload():
     reevaluate_score(file.filename)
 
     return f"Score: idk"
-
-app.run(debug=True)
