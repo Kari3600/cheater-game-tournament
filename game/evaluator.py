@@ -4,8 +4,8 @@ import traceback
 import os
 from game import Game
 
-def capitalize_first_letter(s):
-    return s[0].upper() + s[1:] if s else s
+def snake_to_pascal(s):
+    return "".join(word.capitalize() for word in s.split("_")) if s else s
 
 def comparePlayers(player1_class, player2_class):
     scores = [0, 0, 0]
@@ -44,7 +44,7 @@ def loadPlayer(path):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
-    simpleName = capitalize_first_letter(os.path.basename(path).split(".")[0])
+    simpleName = snake_to_pascal(os.path.basename(path).split(".")[0])
     if not hasattr(module, simpleName):
         raise Exception(f"Expected class named {simpleName} in {path}")
     return getattr(module, simpleName)
