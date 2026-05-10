@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 import psycopg2
 import subprocess
 import os
 import numpy as np
+import traceback
 
 app = Flask(__name__)
 
@@ -109,6 +110,12 @@ def index():
 def upload():
     file = request.files["agent"]
 
+    if not file.filename:
+        raise Exception("Invalid file name")
+    
+    if file.filename == "randomPlayer":
+        raise Exception("Illegal file name")
+
     conn = get_connection()
     
     with conn.cursor() as c:
@@ -122,4 +129,11 @@ def upload():
 
     reevaluate_score(file.filename)
 
-    return f"Score: idk"
+    return redirect(url_for("index"))
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    return f"""
+    <h1>Server Error</h1>
+    <pre>{traceback.format_exc()}</pre>
+    """, 500
