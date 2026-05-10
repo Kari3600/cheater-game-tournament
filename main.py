@@ -64,10 +64,11 @@ def get_ranking():
     for i in range(len(indexes)):
         for j in range(i+1, len(indexes)):
 
-            score = c.execute(
+            c.query(
                 "SELECT score FROM scores WHERE agent1 = %(agent1)s AND agent2 = %(agent2)s",
                 {"agent1": indexes[i], "agent2": indexes[j]}
-            ).fetchone()
+            )
+            score = c.fetchone()
 
             matrix[i][j] = score[0]
             matrix[j][i] = -score[0]
