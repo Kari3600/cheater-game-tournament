@@ -120,7 +120,9 @@ def upload():
     
     with conn.cursor() as c:
         c.execute("INSERT INTO agents (name, code) \
-                  VALUES (%(name)s, %(code)s)",
+                  VALUES (%(name)s, %(code)s) \
+                  ON CONFLICT(name) \
+                  DO UPDATE SET code = excluded.code;",
                   {"name": file.filename, "code": file.read().decode("utf-8")}
         )
 
