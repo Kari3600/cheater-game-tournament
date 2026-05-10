@@ -43,7 +43,7 @@ def loadPlayer(path):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
-    simpleName = capitalize_first_letter(path.split("\\")[-1].split(".")[0])
+    simpleName = capitalize_first_letter(path.split("/")[-1].split(".")[0])
     if not hasattr(module, simpleName):
         raise Exception(f"Expected class named {simpleName} in {path}")
     return getattr(module, simpleName)

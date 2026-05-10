@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request
-import sqlite3
+import psycopg2
 import subprocess
 import os
 import numpy as np
@@ -8,11 +8,23 @@ app = Flask(__name__)
 
 UPLOAD_FOLDER = "uploads"
 
+def get_connection():
+    return psycopg2.connect(
+        database=os.environ["db.database"],
+        user=os.environ["db.user"],
+        password=os.environ["db.password"],
+        host=os.environ["db.host"],
+        port=os.environ["db.port"],
+    )
+
 def get_agents():
     return [agent for agent in os.listdir(UPLOAD_FOLDER) if agent.endswith(".py")]
 
 def reevaluate_score(filename):
     path1 = os.path.join(UPLOAD_FOLDER, filename)
+
+    conn = get_connection()
+    c = conn.cursor()
 
     for file in get_agents():
         if file == filename: continue
@@ -29,9 +41,6 @@ def reevaluate_score(filename):
 
         result = int(result.stdout)
 
-        conn = sqlite3.connect("leaderboard.db")
-        c = conn.cursor()
-
         c.execute(
             "INSERT INTO scores (agent1, agent2, score) \
              VALUES (:agent1, :agent2, :score) \
@@ -41,17 +50,19 @@ def reevaluate_score(filename):
             {"agent1": file, "agent2": filename, "score": -int(result)}
         )
 
-        conn.commit()
-        conn.close()
+    conn.commit()
+    conn.close()
 
 def get_ranking():
     indexes = get_agents()
     indexes.sort()
     matrix = np.zeros((len(indexes), len(indexes)), dtype=np.int32)
+
+    conn = get_connection()
+    c = conn.cursor()
+
     for i in range(len(indexes)):
         for j in range(i+1, len(indexes)):
-            conn = sqlite3.connect("leaderboard.db")
-            c = conn.cursor()
 
             score = c.execute(
                 "SELECT score FROM scores WHERE agent1 = :agent1 AND agent2 = :agent2",
@@ -60,6 +71,9 @@ def get_ranking():
 
             matrix[i][j] = score[0]
             matrix[j][i] = -score[0]
+
+    conn.commit()
+    conn.close()
 
     ranking = [(indexes[i], sum(matrix[i])) for i in range(len(indexes))]
 
