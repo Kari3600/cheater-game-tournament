@@ -112,30 +112,49 @@ def upload():
 
     if not file.filename:
         raise Exception("Invalid file name")
-    
-    if file.filename == "randomPlayer":
+
+    original_name = file.filename
+
+    if not original_name.endswith(".py"):
+        raise Exception("Only .py files are allowed")
+
+    safe_name = os.path.basename(original_name)
+
+    if safe_name != original_name:
+        raise Exception("Invalid file name")
+
+    if safe_name == "randomPlayer.py":
         raise Exception("Illegal file name")
 
+    MAX_SIZE = 1024 * 1024
+    raw = file.read(MAX_SIZE + 1)
+    if len(raw) > MAX_SIZE:
+        raise Exception("File too large (max 1 MB)")
+
+    try:
+        code = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        raise Exception("File must be valid UTF-8 text")
+
     conn = get_connection()
-    
     with conn.cursor() as c:
         c.execute("INSERT INTO agents (name, code) \
                   VALUES (%(name)s, %(code)s) \
                   ON CONFLICT(name) \
                   DO UPDATE SET code = excluded.code;",
-                  {"name": file.filename, "code": file.read().decode("utf-8")}
+                  {"name": safe_name, "code": code}
         )
 
     conn.commit()
     conn.close()
 
-    reevaluate_score(file.filename)
+    reevaluate_score(safe_name)
 
     return redirect(url_for("index"))
 
 @app.errorhandler(Exception)
 def handle_exception(e):
     return f"""
-    <h1>Server Error</h1>
-    <pre>{traceback.format_exc()}</pre>
-    """, 500
+    <h1>Error</h1>
+    <p>{e}</p>
+    """, 400
