@@ -69,9 +69,23 @@ def upload():
 
     if not agent:
         raise Exception("Invalid file name")
+
+    if not agent.endswith(".py"):
+        raise Exception("Only .py files are allowed")
+
     
-    if agent == "randomPlayer":
+    if agent == "randomPlayer.py":
         raise Exception("Illegal file name")
+
+    MAX_SIZE = 1024 * 1024
+    raw = file.read(MAX_SIZE + 1)
+    if len(raw) > MAX_SIZE:
+        raise Exception("File too large (max 1 MB)")
+
+    try:
+        agent_code = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        raise Exception("File must be valid UTF-8 text")
 
     path1 = os.path.join(UPLOAD_FOLDER, agent)
 
@@ -91,10 +105,8 @@ def upload():
 
         agents[name] = id
 
-    code = file.read().decode("utf-8")
-
     with open(path1, "w") as f:
-        f.write(code)
+        f.write(agent_code)
 
     scores = []
 
@@ -131,6 +143,8 @@ def upload():
     with conn.cursor() as c:
         c.execute("SELECT id FROM agents WHERE name = %(agent)s;", {"agent": agent})
         id = c.fetchone()[0]
+
+        agents[agent] = id
         
         for agent1, agent2, score in scores:
             c.execute(

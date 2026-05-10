@@ -2,3 +2,4 @@ __pycache__
 .env
 launcher.py
 uploads
+test_server.py
