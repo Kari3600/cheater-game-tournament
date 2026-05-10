@@ -1,0 +1,17 @@
+<html>
+    <head>
+        <title>My Flask App</title>
+    </head>
+    <body>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="agent">
+            <button type="submit">Upload</button>
+        </form>
+        <h1>Leaderboard</h1>
+        {% for row in ranking %}
+            <div>
+                {{ row[0] }} - {{ row[1] }}
+            </div>
+        {% endfor %}
+    </body>
+</html>
