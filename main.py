@@ -43,7 +43,7 @@ def reevaluate_score(filename):
 
         c.execute(
             "INSERT INTO scores (agent1, agent2, score) \
-             VALUES (:agent1, :agent2, :score) \
+             VALUES (%(agent1)s, %(agent2)s, %(score)s) \
              ON CONFLICT(agent1, agent2) \
              DO UPDATE SET score = excluded.score;",
             {"agent1": filename, "agent2": file, "score": int(result)} if filename < file else
@@ -65,7 +65,7 @@ def get_ranking():
         for j in range(i+1, len(indexes)):
 
             score = c.execute(
-                "SELECT score FROM scores WHERE agent1 = :agent1 AND agent2 = :agent2",
+                "SELECT score FROM scores WHERE agent1 = %(agent1)s AND agent2 = %(agent2)s",
                 {"agent1": indexes[i], "agent2": indexes[j]}
             ).fetchone()
 
