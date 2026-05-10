@@ -23,51 +23,6 @@ def get_connection():
 def get_agents():
     return [agent for agent in os.listdir(UPLOAD_FOLDER) if agent.endswith(".py")]
 
-def reevaluate_score(agent):
-    path1 = os.path.join(UPLOAD_FOLDER, agent)
-
-    conn = get_connection()
-    with conn.cursor() as c:
-
-        c.execute("SELECT * FROM agents")
-        agents_data = c.fetchall()
-
-        agents = {}
-
-        for id, name, code in agents_data:
-            path = os.path.join(UPLOAD_FOLDER, name)
-            with open(path, "w") as file:
-                file.write(code)
-
-            agents[name] = id
-
-        for other_agent, id in agents.items():
-            if other_agent == agent: continue
-            path2 = os.path.join(UPLOAD_FOLDER, other_agent)
-            print("Calculating score for " + agent + " vs " + other_agent)
-            result = subprocess.run(
-                ["python", "game/evaluator.py", path1, path2],
-                capture_output=True,
-                text=True
-            )
-
-            if result.returncode != 0:
-                raise Exception(f"Error occurred while evaluating {agent} vs {other_agent}: {result.stdout + result.stderr}")
-
-            result = int(result.stdout)
-
-            c.execute(
-                "INSERT INTO scores (agent1, agent2, score) \
-                VALUES (%(agent1)s, %(agent2)s, %(score)s) \
-                ON CONFLICT(agent1, agent2) \
-                DO UPDATE SET score = excluded.score;",
-                {"agent1": agents[agent], "agent2": id, "score": int(result)} if agents[agent] < id else
-                {"agent1": id, "agent2": agents[agent], "score": -int(result)}
-            )
-
-    conn.commit()
-    conn.close()
-
 def get_ranking():
     conn = get_connection()
     scores = []
@@ -110,20 +65,16 @@ def index():
 def upload():
     file = request.files["agent"]
 
-    if not file.filename:
+    agent = file.filename
+
+    if not agent:
         raise Exception("Invalid file name")
 
-    original_name = file.filename
-
-    if not original_name.endswith(".py"):
+    if not agent.endswith(".py"):
         raise Exception("Only .py files are allowed")
 
-    safe_name = os.path.basename(original_name)
-
-    if safe_name != original_name:
-        raise Exception("Invalid file name")
-
-    if safe_name == "randomPlayer.py":
+    
+    if agent == "randomPlayer.py":
         raise Exception("Illegal file name")
 
     MAX_SIZE = 1024 * 1024
@@ -132,29 +83,86 @@ def upload():
         raise Exception("File too large (max 1 MB)")
 
     try:
-        code = raw.decode("utf-8")
+        agent_code = raw.decode("utf-8")
     except UnicodeDecodeError:
         raise Exception("File must be valid UTF-8 text")
 
+    path1 = os.path.join(UPLOAD_FOLDER, agent)
+
     conn = get_connection()
+
+    agents = {}
+    
+    with conn.cursor() as c:
+
+        c.execute("SELECT * FROM agents")
+        agents_data = c.fetchall()
+
+    for id, name, code in agents_data:
+        path = os.path.join(UPLOAD_FOLDER, name)
+        with open(path, "w") as f:
+            f.write(code)
+
+        agents[name] = id
+
+    with open(path1, "w") as f:
+        f.write(agent_code)
+
+    scores = []
+
+    for other_agent in agents.keys():
+        if other_agent == agent: continue
+        path2 = os.path.join(UPLOAD_FOLDER, other_agent)
+        print("Calculating score for " + agent + " vs " + other_agent)
+        result = subprocess.run(
+            ["python", "game/evaluator.py", path1, path2],
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode != 0:
+            raise Exception(f"Error occurred while evaluating {agent} vs {other_agent}: {result.stdout + result.stderr}")
+
+        result = int(result.stdout)
+
+        scores.append(
+            (agent, other_agent, int(result)) if agent < other_agent else
+            (other_agent, agent, -int(result))
+        )
+
     with conn.cursor() as c:
         c.execute("INSERT INTO agents (name, code) \
-                  VALUES (%(name)s, %(code)s) \
-                  ON CONFLICT(name) \
-                  DO UPDATE SET code = excluded.code;",
-                  {"name": safe_name, "code": code}
+            VALUES (%(name)s, %(code)s) \
+            ON CONFLICT(name) \
+            DO UPDATE SET code = excluded.code;",
+            {"name": agent, "code": code}
         )
 
     conn.commit()
-    conn.close()
 
-    reevaluate_score(safe_name)
+    with conn.cursor() as c:
+        c.execute("SELECT id FROM agents WHERE name = %(agent)s;", {"agent": agent})
+        id = c.fetchone()[0]
+
+        agents[agent] = id
+        
+        for agent1, agent2, score in scores:
+            c.execute(
+                "INSERT INTO scores (agent1, agent2, score) \
+                VALUES (%(agent1)s, %(agent2)s, %(score)s) \
+                ON CONFLICT(agent1, agent2) \
+                DO UPDATE SET score = excluded.score;",
+                {"agent1": agents[agent1], "agent2": agents[agent2], "score": score}
+            )
+
+    conn.commit()
+    conn.close()
 
     return redirect(url_for("index"))
 
 @app.errorhandler(Exception)
 def handle_exception(e):
     return f"""
-    <h1>Error</h1>
-    <p>{e}</p>
-    """, 400
+    <h1>Server Error</h1>
+    <pre>{traceback.format_exc()}</pre>
+    """, 500
