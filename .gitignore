@@ -1,4 +1,5 @@
 __pycache__
 .env
 launcher.py
-uploadstest_server.py
+uploads
+test_server.py
