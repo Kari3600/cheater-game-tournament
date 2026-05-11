@@ -149,7 +149,7 @@ def upload():
             VALUES (%(name)s, %(code)s) \
             ON CONFLICT(name) \
             DO UPDATE SET code = excluded.code;",
-            {"name": agent, "code": code}
+            {"name": agent, "code": agent_code}
         )
 
     conn.commit()
