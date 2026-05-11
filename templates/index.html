@@ -206,7 +206,7 @@ class YourName(Player):
                 <tr>
                   <td class="col-user">{{ row[0] }}</td>
                   <td>Python</td>
-                  <td class="col-score">{{ row[1] }}</td>
+                  <td class="col-score">{{ "%0.4f"|format(row[1]) }}</td>
                 </tr>
                 {% endfor %}
               </tbody>

@@ -27,6 +27,7 @@ def get_ranking():
     conn = get_connection()
     scores = []
     indexes = {}
+    names = []
     print(f"Is connection closed: {conn.closed}")
     with conn.cursor() as c:
         c.execute(
@@ -36,20 +37,33 @@ def get_ranking():
         c.execute(
             "SELECT id, name FROM agents"
         )
-        indexes = {name: id for id, name in c.fetchall()}
+        indexes = {id: name for id, name in c.fetchall()}
+        names = list(indexes.values())
 
     conn.commit()
     conn.close()
 
-    size = max(indexes.values())+1
+    size = len(names)
 
     matrix = np.zeros((size, size), dtype=np.int32)
 
     for id1, id2, score in scores:
-        matrix[id1, id2] = score
-        matrix[id2, id1] = -score
+        idx1 = names.index(indexes[id1])
+        idx2 = names.index(indexes[id2])
+        matrix[idx1, idx2] = score
+        matrix[idx2, idx1] = -score
 
-    ranking = [(name, sum(matrix[id])) for name, id in indexes.items()]
+    matrix = matrix/2000 + 0.5
+
+    np.fill_diagonal(matrix, 0)
+
+    scores = np.ones((size,))
+
+    for i in range(25):
+        scores = (matrix * scores).sum(axis=1)
+        scores /= scores.sum()
+
+    ranking = [(names[idx], scores[idx]) for idx in range(size)]
 
     ranking.sort(key=lambda x: x[1], reverse=True)
 
