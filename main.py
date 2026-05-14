@@ -4,6 +4,7 @@ import subprocess
 import os
 import numpy as np
 import traceback
+import pandas as pd
 
 app = Flask(__name__)
 
@@ -23,7 +24,7 @@ def get_connection():
 def get_agents():
     return [agent for agent in os.listdir(UPLOAD_FOLDER) if agent.endswith(".py")]
 
-def get_ranking():
+def get_scores_matrix():
     conn = get_connection()
     scores = []
     indexes = {}
@@ -57,25 +58,32 @@ def get_ranking():
 
     np.fill_diagonal(matrix, 0)
 
-    scores = np.ones((size,))
+    df = pd.DataFrame(matrix, index = names, columns = names)
+
+    return df
+
+def get_ranking(df: pd.DataFrame):
+    
+    size = len(df)
+
+    scores = pd.Series([1] * size, index = df.index)
 
     for i in range(25):
-        scores = (matrix * scores).sum(axis=1)
+        scores = df.dot(scores)
         scores /= scores.sum()
 
     scores *= size
 
-    ranking = [(names[idx], scores[idx]) for idx in range(size)]
+    scores.sort_values(ascending=False, inplace=True)
 
-    ranking.sort(key=lambda x: x[1], reverse=True)
-
-    return ranking
+    return scores
 
 @app.route("/")
 def index():
-    ranking = get_ranking()
+    df= get_scores_matrix()
+    ranking = get_ranking(df)
 
-    return render_template("index.html", ranking=ranking)
+    return render_template("index.html", df=df, ranking=ranking)
 
 @app.route("/upload", methods=["POST"])
 def upload():

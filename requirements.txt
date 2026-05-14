@@ -3,3 +3,4 @@ numpy
 importlib
 gunicorn
 psycopg2
+pandas

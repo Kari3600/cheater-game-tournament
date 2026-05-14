@@ -41,6 +41,10 @@
             Standing
             <span class="arrow"></span>
           </a>
+          <a href="#" class="tab" data-tab="results">
+            Results
+            <span class="arrow"></span>
+          </a>
           <a href="#" class="tab" data-tab="submit">
             Submit
             <span class="arrow"></span>
@@ -192,7 +196,6 @@ class YourName(Player):
               <span>OLE — Output Limit Exceeded</span>
               <span>PLE — Presentation Limit Exceeded</span>
             </div>
-            {% if ranking %}
             <table class="leaderboard-table">
               <thead>
                 <tr>
@@ -202,18 +205,22 @@ class YourName(Player):
                 </tr>
               </thead>
               <tbody>
-                {% for row in ranking %}
+                {% for name, score in ranking.items() %}
                 <tr>
-                  <td class="col-user">{{ row[0] }}</td>
+                  <td class="col-user">{{ name }}</td>
                   <td>Python</td>
-                  <td class="col-score">{{ "%0.4f"|format(row[1]) }}</td>
+                  <td class="col-score">{{ "%0.4f"|format(score) }}</td>
                 </tr>
                 {% endfor %}
               </tbody>
             </table>
-            {% else %}
-            <p>No submissions yet. Be the first!</p>
-            {% endif %}
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-results">
+          <div class="section">
+            <h3>Results</h3>
+            {{ df.to_html()|safe }}
           </div>
         </div>
 
