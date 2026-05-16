@@ -5,6 +5,7 @@ import os
 import numpy as np
 import traceback
 import pandas as pd
+import threading
 
 app = Flask(__name__)
 
@@ -110,7 +111,12 @@ def upload():
         agent_code = raw.decode("utf-8")
     except UnicodeDecodeError:
         raise Exception("File must be valid UTF-8 text")
+    
+    threading.Thread(target=evaluate_and_upload, args=(agent, agent_code)).start()
 
+    return redirect(url_for("index"))
+
+def evaluate_and_upload(agent, agent_code):
     path1 = os.path.join(UPLOAD_FOLDER, agent)
 
     conn = get_connection()
@@ -181,8 +187,6 @@ def upload():
 
     conn.commit()
     conn.close()
-
-    return redirect(url_for("index"))
 
 @app.errorhandler(Exception)
 def handle_exception(e):
