@@ -6,10 +6,13 @@ import numpy as np
 import traceback
 import pandas as pd
 import threading
+from queue import Queue
 
 app = Flask(__name__)
 
 UPLOAD_FOLDER = "uploads"
+
+players_queue = Queue()
 
 def get_connection():
     conn = psycopg2.connect(
@@ -112,7 +115,7 @@ def upload():
     except UnicodeDecodeError:
         raise Exception("File must be valid UTF-8 text")
     
-    threading.Thread(target=evaluate_and_upload, args=(agent, agent_code)).start()
+    players_queue.put((agent, agent_code))
 
     return redirect(url_for("index"))
 
@@ -188,9 +191,29 @@ def evaluate_and_upload(agent, agent_code):
     conn.commit()
     conn.close()
 
+def worker():
+
+    print("Worker started")
+
+    while True:
+
+        agent, agent_code = players_queue.get()
+
+        try:
+            evaluate_and_upload(agent, agent_code)
+        except Exception:
+            print(f"An error occured: {traceback.format_exc()}")
+
+        players_queue.task_done()
+
 @app.errorhandler(Exception)
 def handle_exception(e):
     return f"""
     <h1>Server Error</h1>
     <pre>{traceback.format_exc()}</pre>
     """, 500
+
+print(f"Name: {__name__}")
+if __name__ == "main":
+    print("Starting worker")
+    threading.Thread(target=worker).start()
