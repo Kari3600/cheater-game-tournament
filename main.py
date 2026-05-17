@@ -197,7 +197,11 @@ def worker():
 
     while True:
 
+        print("Waiting for agents")
+
         agent, agent_code = players_queue.get()
+
+        print(f"Agent {agent} received")
 
         try:
             evaluate_and_upload(agent, agent_code)
@@ -216,4 +220,4 @@ def handle_exception(e):
 print(f"Name: {__name__}")
 if __name__ == "main":
     print("Starting worker")
-    threading.Thread(target=worker).start()
+    threading.Thread(target=worker, daemon=True).start()
