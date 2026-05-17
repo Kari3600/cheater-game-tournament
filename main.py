@@ -138,7 +138,7 @@ def evaluate_and_upload(agent, agent_code):
 
         agents[name] = id
 
-    with open(path1, "w") as f:
+    with open(path1, "w", encoding="utf-8") as f:
         f.write(agent_code)
 
     scores = []
